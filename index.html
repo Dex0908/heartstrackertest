@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sky Hearts ✦ Трекер сердечек</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Neon: no client SDK needed — we call our own /api/ endpoints -->
 <style>
 :root {
   --sky-deep:    #02050f;
@@ -645,25 +644,9 @@ const PRICE_LIST = [
 ];
 
 // ─────────────────────────────────────────────────────
-// SUPABASE INIT
+// NEON API  (calls /api/clients and /api/history)
 // ─────────────────────────────────────────────────────
-const SUPABASE_URL = window.ENV_SUPABASE_URL || '';
-const SUPABASE_KEY = window.ENV_SUPABASE_ANON_KEY || '';
-
-let sb = null;
-let sbReady = false;
-
-function initSupabase() {
-  try {
-    if (SUPABASE_URL && SUPABASE_KEY) {
-      sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      sbReady = true;
-    }
-  } catch(e) {
-    console.warn('Supabase init failed, using localStorage fallback', e);
-  }
-}
-initSupabase();
+let neonReady = true; // always true — we just check responses
 
 function setSyncStatus(state, text) {
   const el = document.getElementById('sync-status');
@@ -675,7 +658,7 @@ function setSyncStatus(state, text) {
 }
 
 // ─────────────────────────────────────────────────────
-// STATE  (Supabase + localStorage fallback)
+// STATE  (Neon API + localStorage fallback)
 // ─────────────────────────────────────────────────────
 const LS_KEY = 'skyhearts_data';
 
@@ -691,31 +674,27 @@ function saveStateLocal(s) {
   catch(e) { showToast('⚠ Не удалось сохранить локально'); }
 }
 
-// Load state: try Supabase first, fallback to localStorage
+// Load state: try Neon API first, fallback to localStorage
 async function loadState() {
-  if (!sbReady) return loadStateLocal();
   setSyncStatus('loading', 'Загрузка…');
   try {
-    const { data: clients, error } = await sb
-      .from('clients')
-      .select('*, history:heart_history(*)')
-      .order('added_ts', { ascending: false });
-
-    if (error) throw error;
+    const res = await fetch('/api/clients');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { clients } = await res.json();
 
     // Normalize from DB shape to app shape
     const normalized = (clients || []).map(c => ({
-      id:          c.id,
-      nick:        c.nick,
-      name:        c.nick,
-      note:        c.note || '',
-      deadline:    c.deadline || '',
-      guarantor:   c.guarantor || 'нет',
-      codePhrase:  c.code_phrase || '',
-      ordered:     c.ordered || 0,
-      createdAt:   c.created_at ? new Date(c.created_at).toLocaleDateString('ru-RU') : '',
-      addedTs:     c.added_ts || 0,
-      history:     (c.history || []).map(h => ({
+      id:         c.id,
+      nick:       c.nick,
+      name:       c.nick,
+      note:       c.note || '',
+      deadline:   c.deadline || '',
+      guarantor:  c.guarantor || 'нет',
+      codePhrase: c.code_phrase || '',
+      ordered:    c.ordered || 0,
+      createdAt:  c.created_at ? new Date(c.created_at).toLocaleDateString('ru-RU') : '',
+      addedTs:    c.added_ts || 0,
+      history:    (c.history || []).map(h => ({
         id:     h.id,
         date:   h.date,
         amount: h.amount,
@@ -724,33 +703,36 @@ async function loadState() {
     }));
 
     const state = { clients: normalized };
-    saveStateLocal(state); // keep local in sync
-    setSyncStatus('ok', 'Supabase');
+    saveStateLocal(state);
+    setSyncStatus('ok', 'Neon');
     return state;
   } catch(e) {
-    console.warn('Supabase load failed, using localStorage', e);
+    console.warn('Neon load failed, using localStorage:', e);
     setSyncStatus('err', 'Офлайн');
     return loadStateLocal();
   }
 }
 
-// Save a single client to Supabase
+// Save a single client to Neon
 async function saveClientToSb(client) {
-  if (!sbReady) return;
   setSyncStatus('loading', 'Сохранение…');
   try {
-    const { error } = await sb.from('clients').upsert({
-      id:          client.id,
-      nick:        client.nick,
-      note:        client.note,
-      deadline:    client.deadline,
-      guarantor:   client.guarantor,
-      code_phrase: client.codePhrase,
-      ordered:     client.ordered,
-      added_ts:    client.addedTs,
-    }, { onConflict: 'id' });
-    if (error) throw error;
-    setSyncStatus('ok', 'Supabase');
+    const res = await fetch('/api/clients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id:          client.id,
+        nick:        client.nick,
+        note:        client.note,
+        deadline:    client.deadline,
+        guarantor:   client.guarantor,
+        code_phrase: client.codePhrase,
+        ordered:     client.ordered,
+        added_ts:    client.addedTs,
+      })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    setSyncStatus('ok', 'Neon');
   } catch(e) {
     setSyncStatus('err', 'Ошибка записи');
     console.error('saveClient error', e);
@@ -758,31 +740,33 @@ async function saveClientToSb(client) {
 }
 
 async function deleteClientFromSb(id) {
-  if (!sbReady) return;
   try {
-    await sb.from('heart_history').delete().eq('client_id', id);
-    await sb.from('clients').delete().eq('id', id);
+    const res = await fetch(`/api/clients?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
   } catch(e) { console.error('deleteClient error', e); }
 }
 
 async function addHistoryEntryToSb(clientId, entry) {
-  if (!sbReady) return;
   try {
-    const { error } = await sb.from('heart_history').upsert({
-      id:        entry.id,
-      client_id: clientId,
-      date:      entry.date,
-      amount:    entry.amount,
-      note:      entry.note || '',
-    }, { onConflict: 'id' });
-    if (error) throw error;
+    const res = await fetch('/api/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id:        entry.id,
+        client_id: clientId,
+        date:      entry.date,
+        amount:    entry.amount,
+        note:      entry.note || '',
+      })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
   } catch(e) { console.error('addHistory error', e); }
 }
 
 async function deleteHistoryEntryFromSb(entryId) {
-  if (!sbReady) return;
   try {
-    await sb.from('heart_history').delete().eq('id', entryId);
+    const res = await fetch(`/api/history?id=${encodeURIComponent(entryId)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
   } catch(e) { console.error('deleteHistory error', e); }
 }
 
@@ -863,8 +847,8 @@ function getSortedFiltered(clients, sort, search) {
 
 function syncBadgeHtml() {
   return `<span class="sync-status" id="sync-status">
-    <span class="sync-dot ${sbReady?'ok':'err'}"></span>
-    <span class="sync-label">${sbReady?'Supabase':'Офлайн'}</span>
+    <span class="sync-dot ok"></span>
+    <span class="sync-label">Neon</span>
   </span>`;
 }
 
@@ -1434,12 +1418,17 @@ async function resetToday() {
 
 async function resetAll() {
   if (!confirm('Сбросить ВСЁ? Клиенты и история будут удалены.')) return;
-  if (sbReady) {
-    setSyncStatus('loading', 'Очистка…');
-    try {
-      await sb.from('heart_history').delete().neq('id', 'x');
-      await sb.from('clients').delete().neq('id', 'x');
-    } catch(e) { console.error(e); }
+  setSyncStatus('loading', 'Очистка…');
+  try {
+    // Delete all clients one by one (cascade removes history via FK)
+    const s = _cachedState || loadStateLocal();
+    for (const c of (s.clients || [])) {
+      await fetch(`/api/clients?id=${encodeURIComponent(c.id)}`, { method: 'DELETE' });
+    }
+    setSyncStatus('ok', 'Neon');
+  } catch(e) {
+    setSyncStatus('err', 'Ошибка очистки');
+    console.error(e);
   }
   const empty = { clients: [] };
   _cachedState = empty;
