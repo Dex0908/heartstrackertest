@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sky Hearts ✦ Трекер сердечек</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky-deep:    #060d1f;
+  --sky-mid:     #0e1c3a;
+  --sky-light:   #162448;
+  --horizon:     #a06020;
+  --gold:        #f5c842;
+  --gold-soft:   #e8b84b;
+  --gold-glow:   rgba(245,200,66,0.14);
+  --gold-glow2:  rgba(245,200,66,0.06);
+  --candle:      #ff9a5c;
+  --candle-glow: rgba(255,154,92,0.18);
+  --heart:       #ff5c91;
+  --heart-glow:  rgba(255,92,145,0.18);
+  --cloud:       rgba(255,255,255,0.04);
+  --cloud2:      rgba(255,255,255,0.08);
+  --text:        #ede4cc;
+  --text-soft:   rgba(237,228,204,0.6);
+  --text-dim:    rgba(237,228,204,0.3);
+  --border:      rgba(245,200,66,0.12);
+  --border2:     rgba(245,200,66,0.22);
+  --border3:     rgba(255,255,255,0.07);
+  --surface:     rgba(6,13,31,0.92);
+  --surface2:    rgba(14,28,58,0.82);
+  --surface3:    rgba(22,36,72,0.6);
+  --green:       #4ecf9a;
+  --green-glow:  rgba(78,207,154,0.13);
+  --radius:      12px;
+  --radius-sm:   8px;
+  --radius-xs:   5px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--sky-deep);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  min-height: 100vh;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+/* ── SKY BACKGROUND ── */
+.sky-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.sky-gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(140,80,20,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 20% 70%, rgba(14,28,58,0.8) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 35% at 80% 60%, rgba(10,18,40,0.7) 0%, transparent 55%),
+    linear-gradient(175deg, #030812 0%, #060d1f 35%, #0a1428 60%, #060d1f 100%);
+}
+.star { position: absolute; border-radius: 50%; background: white; animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s); }
+@keyframes twinkle {
+  0%,100% { opacity: var(--op1, 0.3); transform: scale(1); }
+  50%      { opacity: var(--op2, 0.9); transform: scale(1.4); }
+}
+.cloud-layer { position: absolute; width: 100%; height: 100%; }
+.cloud-shape {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.06) 0%, transparent 70%);
+  animation: drift var(--d, 40s) ease-in-out infinite alternate;
+}
+@keyframes drift {
+  from { transform: translateX(0) translateY(0) scale(1); }
+  to   { transform: translateX(var(--dx,30px)) translateY(var(--dy,-15px)) scale(var(--ds,1.05)); }
+}
+.aurora {
+  position: absolute;
+  width: 120%; left: -10%;
+  height: 300px; top: 5%;
+  background: linear-gradient(180deg,
+    transparent 0%, rgba(94,219,170,0.04) 25%,
+    rgba(245,200,66,0.03) 50%, rgba(255,107,157,0.03) 75%, transparent 100%);
+  animation: aurora 12s ease-in-out infinite alternate;
+  filter: blur(30px);
+}
+@keyframes aurora {
+  0%   { transform: skewX(-3deg) translateY(0); opacity: 0.5; }
+  50%  { transform: skewX(2deg) translateY(20px); opacity: 1; }
+  100% { transform: skewX(-1deg) translateY(-10px); opacity: 0.6; }
+}
+
+/* ── LAYOUT ── */
+.container   { max-width: 900px; margin: 0 auto; padding: 0 22px; position: relative; z-index: 1; }
+.narrow-wrap { max-width: 480px; margin: 0 auto; padding: 0 22px; position: relative; z-index: 1; }
+.pub-wrap    { max-width: 540px; margin: 0 auto; padding: 0 22px; position: relative; z-index: 1; }
+
+/* ── HEADER ── */
+.sky-header {
+  padding: 24px 0 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+}
+.header-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Cinzel', serif;
+  font-size: 18px; font-weight: 600; letter-spacing: 0.04em;
+  color: var(--gold); text-shadow: 0 0 20px rgba(245,200,66,0.5);
+}
+.logo-icon { font-size: 22px; animation: heartbeat 2.5s ease-in-out infinite; }
+@keyframes heartbeat {
+  0%,100% { transform: scale(1); }
+  15%      { transform: scale(1.18); }
+  30%      { transform: scale(1); }
+  45%      { transform: scale(1.1); }
+}
+.logo span { color: var(--heart); }
+.badge {
+  font-size: 11px; padding: 4px 12px; border-radius: 99px;
+  font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.badge-admin  { background: var(--gold-glow); color: var(--gold); border: 1px solid var(--border2); }
+.badge-public { background: var(--heart-glow); color: var(--heart); border: 1px solid rgba(255,107,157,0.3); }
+
+/* ── CARDS ── */
+.glass-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+  position: relative; overflow: hidden;
+}
+.glass-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+  pointer-events: none; border-radius: inherit;
+}
+.card-title {
+  font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600;
+  letter-spacing: 0.08em; color: var(--gold-soft); text-transform: uppercase;
+  margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+.card-title::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--border2), transparent);
+}
+
+/* ── STATS GRID ── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; text-align: center;
+  position: relative; overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+  backdrop-filter: blur(8px);
+}
+.stat-card:hover { transform: translateY(-2px); border-color: var(--border2); }
+.stat-card::before {
+  content: ''; position: absolute;
+  top: -30px; left: 50%; transform: translateX(-50%);
+  width: 80px; height: 80px; border-radius: 50%;
+  filter: blur(20px); background: var(--glow, var(--gold-glow));
+}
+.stat-icon { font-size: 20px; margin-bottom: 6px; }
+.stat-val { font-family: 'Cinzel', serif; font-size: 30px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; }
+.c-gold    { color: var(--gold); }
+.c-green   { color: var(--green); }
+.c-heart   { color: var(--heart); }
+.c-candle  { color: var(--candle); }
+
+/* ── TABS ── */
+.tabs {
+  display: flex; gap: 3px;
+  background: rgba(13,27,62,0.8); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 4px; margin-bottom: 24px;
+  backdrop-filter: blur(8px); overflow-x: auto;
+}
+.tab {
+  flex: 1; padding: 9px 14px; border-radius: 12px; border: none;
+  background: transparent; cursor: pointer;
+  font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--text-dim); transition: all 0.2s;
+  white-space: nowrap; text-align: center; letter-spacing: 0.02em;
+}
+.tab:hover { color: var(--text-soft); }
+.tab.active {
+  background: linear-gradient(135deg, rgba(245,200,66,0.2), rgba(245,200,66,0.1));
+  color: var(--gold); border: 1px solid var(--border2);
+  box-shadow: 0 0 12px rgba(245,200,66,0.15);
+}
+
+/* ── FORMS ── */
+.form-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.form-label { font-size: 12px; color: var(--text-dim); min-width: 96px; text-transform: uppercase; letter-spacing: 0.05em; }
+.sky-input {
+  background: rgba(13,27,62,0.7); border: 1px solid var(--border3);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: 'Nunito', sans-serif; font-size: 14px; padding: 10px 14px;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  flex: 1; min-width: 120px; width: 100%; backdrop-filter: blur(4px);
+}
+.sky-input::placeholder { color: var(--text-dim); }
+.sky-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245,200,66,0.1); }
+.sky-input.err { border-color: var(--heart); }
+.sky-input option { background: #1a2f5c; }
+textarea.sky-input { resize: vertical; min-height: 64px; }
+
+/* ── SEARCH BAR ── */
+.search-wrap { position: relative; margin-bottom: 18px; }
+.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--text-dim); pointer-events: none; }
+.search-wrap .sky-input { padding-left: 40px; }
+.search-glow {
+  position: absolute; inset: -1px; border-radius: var(--radius-sm);
+  background: transparent; box-shadow: 0 0 16px rgba(245,200,66,0.15);
+  pointer-events: none; opacity: 0; transition: opacity 0.3s;
+}
+.search-wrap:focus-within .search-glow { opacity: 1; }
+
+/* ── SORT BAR ── */
+.sort-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+.sort-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; margin-right: 4px; }
+.sort-btn {
+  font-size: 11px; padding: 5px 12px; border-radius: 99px;
+  border: 1px solid var(--border3); background: transparent;
+  color: var(--text-dim); cursor: pointer; font-family: 'Nunito', sans-serif;
+  font-weight: 600; transition: all 0.15s; letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 4px;
+}
+.sort-btn:hover { color: var(--text-soft); border-color: var(--border2); }
+.sort-btn.active { background: var(--gold-glow); color: var(--gold); border-color: var(--border2); }
+
+/* ── HEART PICKER ── */
+.heart-picker { margin: 14px 0 10px; }
+.heart-picker-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+.heart-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.preset-btn {
+  cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+  padding: 7px 14px; border-radius: 99px; border: 1px solid var(--border3);
+  background: rgba(255,92,145,0.08); color: var(--text-soft); transition: all 0.15s; letter-spacing: 0.02em;
+}
+.preset-btn:hover { background: rgba(255,92,145,0.18); border-color: rgba(255,92,145,0.4); color: var(--heart); transform: translateY(-1px); box-shadow: 0 3px 12px rgba(255,92,145,0.2); }
+.preset-btn.active { background: rgba(255,92,145,0.22); border-color: rgba(255,92,145,0.5); color: var(--heart); box-shadow: 0 0 10px rgba(255,92,145,0.25); }
+.qty-stepper { display: flex; align-items: center; gap: 10px; }
+.qty-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border2); background: rgba(245,200,66,0.06);
+  color: var(--gold); font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; font-weight: 300; line-height: 1;
+  flex-shrink: 0; font-family: 'Nunito', sans-serif;
+}
+.qty-btn:hover { background: rgba(245,200,66,0.14); transform: scale(1.1); box-shadow: 0 0 10px rgba(245,200,66,0.2); }
+.qty-btn:active { transform: scale(0.95); }
+.qty-display {
+  font-family: 'Cinzel', serif; font-size: 28px; font-weight: 700;
+  color: var(--heart); min-width: 52px; text-align: center; line-height: 1;
+  text-shadow: 0 0 16px rgba(255,92,145,0.4); letter-spacing: 0.02em;
+  transition: transform 0.12s cubic-bezier(0.34,1.56,0.64,1);
+}
+.qty-heart-icon { font-size: 16px; animation: heartbeat 2.5s ease-in-out infinite; color: var(--heart); }
+.heart-burst { position: fixed; pointer-events: none; z-index: 9999; font-size: 22px; animation: heartFloat 1s ease-out forwards; }
+@keyframes heartFloat {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0.5); }
+}
+
+/* ── BUTTONS ── */
+.btn {
+  cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 600;
+  padding: 10px 22px; border-radius: var(--radius-sm); border: none;
+  transition: all 0.18s; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 7px; letter-spacing: 0.02em;
+}
+.btn-gold { background: linear-gradient(135deg, #f5c842, #e8a820); color: #1a0f00; box-shadow: 0 2px 12px rgba(245,200,66,0.3); }
+.btn-gold:hover { box-shadow: 0 4px 20px rgba(245,200,66,0.5); transform: translateY(-1px); }
+.btn-ghost { background: transparent; color: var(--text-soft); border: 1px solid var(--border2); }
+.btn-ghost:hover { background: var(--gold-glow2); color: var(--text); }
+.btn-danger { background: transparent; color: var(--heart); border: 1px solid rgba(255,107,157,0.25); font-size: 12px; padding: 6px 14px; }
+.btn-danger:hover { background: rgba(255,107,157,0.1); }
+.btn-sm { font-size: 12px; padding: 6px 14px; }
+.btn-full { width: 100%; justify-content: center; }
+.btn-back { background: transparent; border: 1px solid var(--border); color: var(--text-dim); margin-bottom: 18px; }
+.btn-back:hover { color: var(--text-soft); border-color: var(--border2); }
+
+/* ── CLIENT CARD ── */
+.client-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px;
+  cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
+}
+.client-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--accent-color, var(--gold)); border-radius: 3px 0 0 3px; opacity: 0.7;
+}
+.client-card:hover { border-color: var(--border2); transform: translateX(3px); box-shadow: 0 4px 24px rgba(0,0,0,0.25); }
+.client-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.client-left { display: flex; align-items: center; gap: 12px; }
+.avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700;
+  color: #1a1000; flex-shrink: 0; box-shadow: 0 0 12px var(--av-glow, rgba(245,200,66,0.4));
+}
+.client-name { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: 0.02em; }
+.client-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; font-style: italic; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-size: 11px; padding: 3px 10px; border-radius: 99px; font-weight: 600; }
+.chip-total { background: rgba(255,255,255,0.06); color: var(--text-dim); }
+.chip-given { background: var(--green-glow); color: var(--green); border: 1px solid rgba(94,219,170,0.2); }
+.chip-left  { background: var(--heart-glow); color: var(--heart); border: 1px solid rgba(255,107,157,0.2); }
+.chip-today { background: rgba(245,200,66,0.1); color: var(--gold); border: 1px solid rgba(245,200,66,0.2); }
+.chip-done  { background: var(--green-glow); color: var(--green); border: 1px solid rgba(94,219,170,0.3); }
+.chip-code  { background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); font-family: 'Courier New', monospace; }
+
+/* ── PROGRESS BAR ── */
+.pb-wrap { height: 4px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; margin: 10px 0 5px; }
+.pb-fill { height: 100%; border-radius: 99px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
+.pb-done { background: var(--green) !important; }
+
+/* ── LINK BOX ── */
+.link-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.link-box {
+  background: rgba(13,27,62,0.9); border: 1px solid var(--border);
+  border-radius: var(--radius-xs); padding: 7px 12px; font-size: 11px;
+  color: var(--text-dim); flex: 1; overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis; font-family: 'Courier New', monospace;
+}
+.copy-btn {
+  cursor: pointer; background: transparent; border: 1px solid var(--border2);
+  border-radius: var(--radius-xs); color: var(--text-dim); font-size: 11px;
+  padding: 6px 12px; white-space: nowrap; transition: all 0.15s;
+  font-family: 'Nunito', sans-serif; font-weight: 600;
+}
+.copy-btn:hover { color: var(--gold); border-color: var(--border2); }
+.copy-btn.copied { color: var(--green); border-color: rgba(94,219,170,0.4); }
+
+/* ── LOG ENTRIES ── */
+.log-entry {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 0; border-bottom: 1px solid rgba(245,200,66,0.07); gap: 10px;
+}
+.log-entry:last-child { border-bottom: none; }
+.log-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.log-orb { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.log-name { font-weight: 600; font-size: 13px; color: var(--text); }
+.log-note { color: var(--text-dim); font-size: 11px; margin-top: 1px; font-style: italic; }
+.log-time { color: var(--text-dim); font-size: 11px; }
+.log-right { display: flex; align-items: center; gap: 6px; }
+.log-amount { color: var(--heart); font-weight: 700; font-size: 14px; white-space: nowrap; }
+.del-btn { background: none; border: none; cursor: pointer; color: var(--text-dim); font-size: 14px; padding: 2px 5px; transition: color 0.15s; border-radius: 4px; }
+.del-btn:hover { color: var(--heart); background: rgba(255,107,157,0.1); }
+
+/* ── SECTION TITLE ── */
+.section-title {
+  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+}
+.section-title::before { content: '✦'; color: var(--gold); font-size: 8px; }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 32px 0; color: var(--text-dim); font-size: 13px; font-style: italic; }
+.empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(90px);
+  background: linear-gradient(135deg, rgba(94,219,170,0.95), rgba(45,180,130,0.95));
+  color: #0d1b3e; font-weight: 700; font-size: 13px;
+  padding: 11px 24px; border-radius: 99px; z-index: 999;
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none; box-shadow: 0 4px 24px rgba(94,219,170,0.3); letter-spacing: 0.03em;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── LOGIN ── */
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+.login-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 24px; padding: 44px 36px; width: 100%; max-width: 360px;
+  margin: 20px; text-align: center; backdrop-filter: blur(20px);
+  box-shadow: 0 0 60px rgba(245,200,66,0.08), 0 8px 40px rgba(0,0,0,0.4);
+}
+.login-emblem { font-size: 52px; margin-bottom: 16px; display: block; animation: float 4s ease-in-out infinite; }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.login-title { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700; color: var(--gold); text-shadow: 0 0 20px rgba(245,200,66,0.4); margin-bottom: 4px; }
+.login-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 28px; font-style: italic; }
+.err-msg { font-size: 12px; color: var(--heart); margin-top: 6px; }
+
+/* ── LOADING ── */
+.loading-overlay {
+  position: fixed; inset: 0; background: var(--sky-deep);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 999; gap: 18px;
+}
+.loading-orb { width: 48px; height: 48px; border-radius: 50%; border: 2px solid rgba(245,200,66,0.15); border-top-color: var(--gold); animation: spin 1s linear infinite; box-shadow: 0 0 20px rgba(245,200,66,0.2); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; color: var(--text-dim); font-style: italic; letter-spacing: 0.05em; }
+
+/* ── DETAIL STATS ── */
+.detail-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+.detail-stat { background: rgba(13,27,62,0.7); border-radius: var(--radius-sm); padding: 14px 10px; text-align: center; border: 1px solid var(--border); }
+.detail-stat-val { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700; margin-bottom: 3px; }
+.detail-stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; }
+
+/* ── PUBLIC HERO ── */
+.pub-hero {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 32px 28px; margin-bottom: 20px;
+  text-align: center; backdrop-filter: blur(12px); position: relative; overflow: hidden;
+}
+.pub-hero::before {
+  content: ''; position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(245,200,66,0.08) 0%, transparent 70%); pointer-events: none;
+}
+.hero-name { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700; color: var(--gold); text-shadow: 0 0 20px rgba(245,200,66,0.3); margin-bottom: 22px; }
+.ring-wrap { position: relative; width: 170px; height: 170px; margin: 0 auto 26px; }
+.ring-svg  { transform: rotate(-90deg); }
+.ring-bg   { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 10; }
+.ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dasharray 1s cubic-bezier(0.4,0,0.2,1); filter: drop-shadow(0 0 8px currentColor); }
+.ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring-num { font-family: 'Cinzel', serif; font-size: 32px; font-weight: 700; line-height: 1; }
+.ring-lbl { font-size: 11px; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.07em; }
+.mini-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.mini-stat { background: rgba(13,27,62,0.7); border-radius: var(--radius-sm); padding: 14px 10px; text-align: center; border: 1px solid var(--border); }
+.mini-lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
+.mini-val { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700; }
+
+/* ── BANNERS ── */
+.done-banner { background: var(--green-glow); border: 1px solid rgba(94,219,170,0.25); border-radius: var(--radius); padding: 18px 22px; text-align: center; margin-bottom: 20px; }
+.done-banner h3 { font-family: 'Cinzel', serif; font-size: 15px; color: var(--green); margin-bottom: 4px; }
+.today-banner { background: rgba(245,200,66,0.06); border: 1px solid rgba(245,200,66,0.15); border-radius: var(--radius); padding: 12px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.refresh-hint { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 18px; font-style: italic; }
+
+/* ── TOOLS TAB ── */
+.tools-section { margin-bottom: 20px; }
+.code-block {
+  background: rgba(13,27,62,0.9); border: 1px solid var(--border3);
+  border-radius: var(--radius-sm); padding: 14px 16px;
+  font-family: 'Courier New', monospace; font-size: 12px;
+  color: var(--text-soft); line-height: 1.7; white-space: pre-wrap;
+  word-break: break-word; position: relative;
+}
+.code-copy {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(245,200,66,0.1); border: 1px solid var(--border2);
+  border-radius: var(--radius-xs); color: var(--gold-soft);
+  font-size: 10px; padding: 4px 10px; cursor: pointer;
+  font-family: 'Nunito', sans-serif; font-weight: 600;
+  transition: all 0.15s;
+}
+.code-copy:hover { background: rgba(245,200,66,0.2); }
+.code-copy.copied { color: var(--green); border-color: rgba(94,219,170,0.4); }
+.price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 4px; }
+.price-item {
+  background: rgba(255,92,145,0.06); border: 1px solid rgba(255,92,145,0.15);
+  border-radius: var(--radius-sm); padding: 14px 12px; text-align: center;
+  transition: all 0.15s;
+}
+.price-item:hover { background: rgba(255,92,145,0.12); border-color: rgba(255,92,145,0.3); }
+.price-usd { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); }
+.price-hearts { font-size: 12px; color: var(--heart); margin-top: 3px; font-weight: 600; }
+.code-phrase-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 0; border-bottom: 1px solid rgba(245,200,66,0.07);
+}
+.code-phrase-row:last-child { border-bottom: none; }
+.code-phrase-num { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text-dim); min-width: 24px; }
+.code-phrase-nick { font-size: 13px; color: var(--text-soft); flex: 1; }
+.code-phrase-val {
+  font-family: 'Courier New', monospace; font-size: 12px;
+  color: #a78bfa; background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.2); border-radius: 4px; padding: 3px 9px;
+}
+.info-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid rgba(245,200,66,0.07); font-size: 13px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.info-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); margin-bottom: 2px; }
+
+/* ── DANGER ZONE ── */
+.danger-zone { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+.no-match { text-align: center; padding: 40px 0; color: var(--text-dim); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .form-row { flex-direction: column; align-items: stretch; }
+  .form-label { min-width: auto; }
+  .client-head { flex-direction: column; }
+  .header-inner { flex-direction: column; align-items: flex-start; }
+  .detail-stats { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .tabs { gap: 2px; }
+  .tab { font-size: 12px; padding: 8px 10px; }
+}
+
+/* ── FADE IN ── */
+.fade-in { animation: fadeIn 0.4s ease forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- SKY BACKGROUND -->
+<div class="sky-bg">
+  <div class="sky-gradient"></div>
+  <div class="aurora"></div>
+  <div class="cloud-layer" id="clouds"></div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-orb"></div>
+  <div class="loading-text">Небо пробуждается…</div>
+</div>
+
+<div id="v-login"  style="display:none"></div>
+<div id="v-dash"   style="display:none"></div>
+<div id="v-detail" style="display:none"></div>
+<div id="v-public" style="display:none"></div>
+<div id="v-board"  style="display:none"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────
+// BACKGROUND EFFECTS
+// ─────────────────────────────────────────────────────
+(function buildSky() {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2 + 0.5;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*80}%;--dur:${2+Math.random()*5}s;--delay:${Math.random()*6}s;--op1:${0.1+Math.random()*0.3};--op2:${0.6+Math.random()*0.4};`;
+    frag.appendChild(s);
+  }
+  document.querySelector('.sky-bg').appendChild(frag);
+
+  const cloud = document.getElementById('clouds');
+  [{w:400,h:200,l:5,t:60,d:50,dx:'40px',dy:'-20px',ds:1.06},
+   {w:600,h:280,l:30,t:45,d:65,dx:'-50px',dy:'15px',ds:0.97},
+   {w:350,h:180,l:65,t:70,d:45,dx:'35px',dy:'-10px',ds:1.04},
+   {w:500,h:220,l:-5,t:80,d:55,dx:'25px',dy:'-5px',ds:1.03},
+   {w:450,h:200,l:70,t:55,d:70,dx:'-30px',dy:'20px',ds:0.98}]
+  .forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'cloud-shape';
+    el.style.cssText = `width:${c.w}px;height:${c.h}px;left:${c.l}%;top:${c.t}%;--d:${c.d}s;--dx:${c.dx};--dy:${c.dy};--ds:${c.ds}`;
+    cloud.appendChild(el);
+  });
+})();
+
+// ─────────────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────────────
+const ADMIN_PASSWORD = 'hearts2025';
+const LS_KEY         = 'skyhearts_data';
+const COLORS = ['#f5c842','#ff9a5c','#ff6b9d','#a78bfa','#5edbaa','#60a5fa','#fb923c','#34d399'];
+const PRICE_LIST = [
+  { usd: 3,  hearts: 135 },
+  { usd: 5,  hearts: 225 },
+  { usd: 10, hearts: 450 },
+  { usd: 15, hearts: 675 },
+  { usd: 20, hearts: 900 },
+  { usd: 25, hearts: 1125 },
+];
+
+// ─────────────────────────────────────────────────────
+// STATE (localStorage)
+// ─────────────────────────────────────────────────────
+let authed = false;
+let currentDetailId = null;
+let dashTab = 'overview';
+let clientSort = 'newest';
+let clientSearch = '';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : { clients: [] };
+  } catch { return { clients: [] }; }
+}
+
+function saveState(s) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(s)); }
+  catch(e) { showToast('⚠ Не удалось сохранить данные', 3000); }
+}
+
+// ─────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────
+const todayKey = () => new Date().toISOString().slice(0,10);
+
+function formatDT(iso) {
+  return new Date(iso).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+const genId = () => Math.random().toString(36).slice(2,9);
+
+function initials(name) {
+  return name.trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+
+function clientColor(id) {
+  return COLORS[parseInt(id,36) % COLORS.length];
+}
+
+function clientStats(c) {
+  const today = todayKey();
+  const gifted      = c.history.reduce((s,e) => s+e.amount, 0);
+  const giftedToday = c.history.filter(e=>e.date.slice(0,10)===today).reduce((s,e)=>s+e.amount,0);
+  const remaining   = Math.max(0, c.ordered-gifted);
+  const percent     = c.ordered ? Math.min(100, Math.round(gifted/c.ordered*100)) : 0;
+  const done        = c.ordered>0 && gifted>=c.ordered;
+  return { gifted, giftedToday, remaining, percent, done };
+}
+
+function showToast(msg, dur=2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function heartWord(n) {
+  if (n%10===1 && n%100!==11) return 'сердце';
+  if ([2,3,4].includes(n%10) && ![12,13,14].includes(n%100)) return 'сердца';
+  return 'сердец';
+}
+
+function show(id) {
+  ['v-login','v-dash','v-detail','v-public','v-board'].forEach(v => {
+    document.getElementById(v).style.display = v===id ? '' : 'none';
+  });
+}
+
+function clientLink(id) {
+  return window.location.href.split('#')[0] + '#client-' + id;
+}
+
+function getSortedFiltered(clients, sort, search) {
+  let arr = [...clients];
+  if (search) {
+    const q = search.toLowerCase();
+    arr = arr.filter(c => (c.nick||c.name).toLowerCase().includes(q) || (c.note||'').toLowerCase().includes(q) || (c.codePhrase||'').toLowerCase().includes(q));
+  }
+  switch(sort) {
+    case 'newest': arr.sort((a,b) => (b.addedTs||0)-(a.addedTs||0)); break;
+    case 'oldest': arr.sort((a,b) => (a.addedTs||0)-(b.addedTs||0)); break;
+    case 'hearts': arr.sort((a,b) => b.ordered-a.ordered); break;
+    case 'alpha':  arr.sort((a,b) => (a.nick||a.name).localeCompare(b.nick||b.name,'ru')); break;
+    case 'given':  arr.sort((a,b) => clientStats(b).gifted-clientStats(a).gifted); break;
+  }
+  return arr;
+}
+
+// ─────────────────────────────────────────────────────
+// ROUTING
+// ─────────────────────────────────────────────────────
+function route() {
+  const hash = window.location.hash;
+  if (hash === '#board') {
+    renderBoard(); show('v-board');
+  } else if (hash.startsWith('#client-')) {
+    renderPublic(hash.slice(8)); show('v-public');
+  } else if (hash.startsWith('#detail-') && authed) {
+    currentDetailId = hash.slice(8);
+    renderDetail(currentDetailId); show('v-detail');
+  } else {
+    if (!authed) { renderLogin(); show('v-login'); }
+    else         { renderDash();  show('v-dash'); }
+  }
+}
+window.addEventListener('hashchange', route);
+
+// ─────────────────────────────────────────────────────
+// LOGIN
+// ─────────────────────────────────────────────────────
+function renderLogin() {
+  document.getElementById('v-login').innerHTML = `
+    <div class="login-wrap">
+      <div class="login-card fade-in">
+        <span class="login-emblem">🕊️</span>
+        <div class="login-title">Sky Hearts</div>
+        <div class="login-sub">Введите пароль для входа</div>
+        <input class="sky-input" type="password" id="login-pass" placeholder="Пароль…"
+          onkeydown="if(event.key==='Enter')doLogin()" style="text-align:center;letter-spacing:0.15em">
+        <div id="login-err" class="err-msg" style="display:none;margin-top:8px">✗ Неверный пароль</div>
+        <button class="btn btn-gold btn-full" style="margin-top:16px" onclick="doLogin()">✦ Войти</button>
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+          <button class="btn btn-ghost btn-full btn-sm" onclick="window.location.hash='#board'">📊 Инфо о заказах</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(() => document.getElementById('login-pass')?.focus(), 50);
+}
+
+function doLogin() {
+  if (document.getElementById('login-pass').value === ADMIN_PASSWORD) {
+    authed = true;
+    renderDash(); show('v-dash');
+  } else {
+    const i = document.getElementById('login-pass');
+    const e = document.getElementById('login-err');
+    i.classList.add('err'); e.style.display = '';
+    setTimeout(() => { i.classList.remove('err'); e.style.display='none'; }, 2000);
+  }
+}
+
+// ─────────────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────────────
+function renderDash(tab) {
+  if (tab) dashTab = tab;
+  const s = loadState();
+  const totalOrdered   = s.clients.reduce((a,c)=>a+c.ordered,0);
+  const totalGifted    = s.clients.reduce((a,c)=>a+clientStats(c).gifted,0);
+  const totalRemaining = s.clients.reduce((a,c)=>a+clientStats(c).remaining,0);
+  const totalToday     = s.clients.reduce((a,c)=>a+clientStats(c).giftedToday,0);
+
+  const tabs = ['overview','clients','give','history','tools'];
+  const tabLabels = ['✦ Обзор','👤 Клиенты','❤ Передать','📜 История','🛠 Инструменты'];
+
+  const allEntries = [];
+  s.clients.forEach(c => c.history.forEach(e => allEntries.push({...e,clientName:c.nick||c.name,clientId:c.id})));
+  allEntries.sort((a,b) => b.date.localeCompare(a.date));
+
+  let tabContent = '';
+
+  // ── OVERVIEW ──
+  if (dashTab === 'overview') {
+    const sorted = getSortedFiltered(s.clients, clientSort, clientSearch);
+    tabContent = `
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="sky-input" id="dash-search" placeholder="Поиск по имени, заметке или коду…"
+          value="${clientSearch.replace(/"/g,'&quot;')}"
+          oninput="clientSearch=this.value;renderDash('overview')">
+        <div class="search-glow"></div>
+      </div>
+      <div class="sort-bar">
+        <span class="sort-label">Сорт.</span>
+        ${[['newest','Новые'],['oldest','Старые'],['hearts','Сердца ↓'],['given','Отдано ↓'],['alpha','А–Я']].map(([k,l])=>
+          `<button class="sort-btn${clientSort===k?' active':''}" onclick="clientSort='${k}';renderDash('overview')">${l}</button>`
+        ).join('')}
+      </div>
+      ${sorted.length
+        ? sorted.map(c=>clientCardHtml(c,true,false)).join('')
+        : `<div class="no-match"><div class="empty-icon">🌫️</div><div>Никого не найдено</div></div>`}
+    `;
+  }
+
+  // ── CLIENTS ──
+  if (dashTab === 'clients') {
+    const sorted = getSortedFiltered(s.clients, clientSort, clientSearch);
+    const clientCount = s.clients.length;
+    const nextNum = String(clientCount + 1).padStart(3, '0');
+    tabContent = `
+      <div class="glass-card">
+        <div class="card-title">Добавить клиента</div>
+        <div class="form-row">
+          <span class="form-label">Ник / имя</span>
+          <input class="sky-input" id="new-nick" placeholder="Игровой ник" onkeydown="if(event.key==='Enter')addClient()">
+        </div>
+        <div class="form-row">
+          <span class="form-label">Заказ (❤)</span>
+          <input class="sky-input" type="number" id="new-order" min="1" placeholder="100" style="max-width:130px">
+        </div>
+        <div class="form-row">
+          <span class="form-label">Дедлайн</span>
+          <input class="sky-input" id="new-deadline" placeholder="Гибко / срочно / дата" style="max-width:200px">
+          <span class="form-label" style="min-width:60px">Гарант</span>
+          <select class="sky-input" id="new-guarantor" style="max-width:110px">
+            <option value="нет">нет</option>
+            <option value="да">да</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <span class="form-label">Заметка</span>
+          <input class="sky-input" id="new-note" placeholder="Необязательно">
+        </div>
+        <div class="form-row" style="align-items:center">
+          <span class="form-label">Код фраза</span>
+          <input class="sky-input" id="new-code" placeholder="AKI-${nextNum}-XX (авто или вручную)" style="font-family:'Courier New',monospace;font-size:13px">
+        </div>
+        <button class="btn btn-gold" onclick="addClient()" style="margin-top:8px">+ Добавить клиента</button>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="sky-input" id="dash-search-c" placeholder="Поиск…"
+          value="${clientSearch.replace(/"/g,'&quot;')}"
+          oninput="clientSearch=this.value;renderDash('clients')">
+        <div class="search-glow"></div>
+      </div>
+      <div class="sort-bar">
+        <span class="sort-label">Сорт.</span>
+        ${[['newest','Новые'],['oldest','Старые'],['hearts','Сердца ↓'],['given','Отдано ↓'],['alpha','А–Я']].map(([k,l])=>
+          `<button class="sort-btn${clientSort===k?' active':''}" onclick="clientSort='${k}';renderDash('clients')">${l}</button>`
+        ).join('')}
+      </div>
+      <div class="section-title">Все клиенты (${sorted.length})</div>
+      ${sorted.length
+        ? sorted.map(c=>clientCardHtml(c,true,true)).join('')
+        : `<div class="no-match"><div class="empty-icon">🌫️</div><div>Никого не найдено</div></div>`}
+      <div class="danger-zone">
+        <button class="btn btn-danger" onclick="resetAll()">✕ Сбросить всё</button>
+      </div>
+    `;
+  }
+
+  // ── GIVE ──
+  if (dashTab === 'give') {
+    tabContent = `
+      <div class="glass-card">
+        <div class="card-title">Записать передачу</div>
+        <div class="form-row" style="align-items:flex-start">
+          <span class="form-label" style="padding-top:10px">Клиент</span>
+          <div style="flex:1;position:relative">
+            <div class="search-wrap" style="margin-bottom:0">
+              <span class="search-icon">🔍</span>
+              <input class="sky-input" id="give-search" placeholder="Введите имя клиента…" autocomplete="off"
+                oninput="giveSearchFilter()" onfocus="giveSearchFilter()" onblur="setTimeout(()=>hideGiveDrop(),200)">
+              <div class="search-glow"></div>
+            </div>
+            <div id="give-drop" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:10;
+              background:rgba(6,13,31,0.97);border:1px solid var(--border2);border-radius:var(--radius-sm);
+              max-height:240px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.5)"></div>
+          </div>
+        </div>
+        <div id="give-selected-info" style="display:none;margin:8px 0 14px;padding:10px 14px;
+          background:var(--gold-glow);border:1px solid var(--border2);border-radius:var(--radius-sm);
+          align-items:center;gap:10px">
+          <div id="give-sel-avatar" class="avatar" style="width:32px;height:32px;font-size:11px"></div>
+          <div>
+            <span style="font-size:12px;color:var(--text-dim)">Выбран: </span>
+            <span id="give-selected-name" style="font-weight:700;font-size:13px;color:var(--gold)"></span>
+            <div id="give-sel-stats" style="font-size:11px;color:var(--text-dim)"></div>
+          </div>
+          <button onclick="clearGiveSelection()" style="margin-left:auto;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;padding:2px 6px;">✕</button>
+        </div>
+        <input type="hidden" id="sel-client" value="">
+
+        <div class="heart-picker">
+          <div class="heart-picker-label">Количество сердец</div>
+          <div class="heart-presets">
+            ${[1,5,10,20,50,100].map(n=>`<button class="preset-btn" onclick="setAmount(${n},'give-amount')">${n===1?'❤ 1':'❤ '+n}</button>`).join('')}
+          </div>
+          <div class="qty-stepper">
+            <button class="qty-btn" onclick="bumpAmount(-1,'give-amount')">−</button>
+            <div class="qty-display" id="give-amount-display">1</div>
+            <button class="qty-btn" onclick="bumpAmount(1,'give-amount')">+</button>
+            <span class="qty-heart-icon">❤</span>
+            <input type="hidden" id="give-amount" value="1">
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:10px">
+          <input class="sky-input" id="give-note" placeholder="Заметка (необязательно)">
+        </div>
+        <button class="btn btn-gold btn-full" onclick="addGiftFromDash()" style="margin-top:12px">❤ Записать передачу</button>
+      </div>
+    `;
+  }
+
+  // ── HISTORY ──
+  if (dashTab === 'history') {
+    tabContent = `
+      <div class="glass-card">
+        <div class="card-title">Вся история передач</div>
+        ${allEntries.length
+          ? allEntries.map(e=>`
+            <div class="log-entry">
+              <div class="log-left">
+                <div class="log-orb" style="background:${clientColor(e.clientId)}22">
+                  <span style="color:${clientColor(e.clientId)}">❤</span>
+                </div>
+                <div>
+                  <div class="log-name">${e.clientName}</div>
+                  ${e.note?`<div class="log-note">${e.note}</div>`:''}
+                  <div class="log-time">${formatDT(e.date)}</div>
+                </div>
+              </div>
+              <div class="log-right">
+                <span class="log-amount">+${e.amount} ❤</span>
+                <button class="del-btn" onclick="deleteEntryGlobal('${e.clientId}','${e.id}')">✕</button>
+              </div>
+            </div>`).join('')
+          : '<div class="empty"><div class="empty-icon">📜</div>Нет записей</div>'}
+      </div>
+      ${allEntries.length?`<div class="danger-zone"><button class="btn btn-danger" onclick="resetToday()">Сбросить сегодня</button></div>`:''}
+    `;
+  }
+
+  // ── TOOLS ──
+  if (dashTab === 'tools') {
+    const s2 = loadState();
+    const codePhrases = s2.clients.map((c,i) => {
+      const letters = (c.nick||c.name).trim().replace(/\s+/g,' ').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      const num = String(i+1).padStart(3,'0');
+      return c.codePhrase || `AKI-${num}-${letters}`;
+    });
+
+    const anketa = `Ник (все аккаунты для получения):
+Количество сердец:
+Распределение между аккаунтами:
+Дедлайн:
+Способ оплаты:
+Через гаранта: да / нет
+Кодовая фраза: AKI-___-___`;
+
+    const reviewTemplate = `Продавец: @ho1ysinner
+Сумма заказа: $___
+Количество сердец: ___ ❤️
+Срок выполнения: ___ дней
+Через гаранта: да / нет
+
+Впечатление:
+(несколько слов о процессе — скорость, общение, выполнение условий)
+
+Рекомендую: ✅ / ❌
+Оценка: ★★★★★`;
+
+    tabContent = `
+      <div class="glass-card tools-section">
+        <div class="card-title">💜 Прайс-лист</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px">45 ❤ за каждый $1</div>
+        <div class="price-grid">
+          ${PRICE_LIST.map(p=>`
+            <div class="price-item">
+              <div class="price-usd">$${p.usd}</div>
+              <div class="price-hearts">❤ ${p.hearts}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="glass-card tools-section">
+        <div class="card-title">🔑 Кодовые фразы</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px">
+          Формат: <span style="font-family:'Courier New',monospace;color:#a78bfa">AKI-[номер]-[инициалы ника]</span>
+        </div>
+        ${s2.clients.length
+          ? s2.clients.map((c,i)=>{
+              const cp = codePhrases[i];
+              return `<div class="code-phrase-row">
+                <span class="code-phrase-num">#${String(i+1).padStart(3,'0')}</span>
+                <span class="code-phrase-nick">${c.nick||c.name}</span>
+                <span class="code-phrase-val">${cp}</span>
+                <button class="copy-btn" style="margin-left:8px;font-size:10px;padding:3px 8px" onclick="copyText('${cp}',this)">Копировать</button>
+              </div>`;
+            }).join('')
+          : '<div class="empty" style="padding:16px 0">Нет клиентов — добавьте их на вкладке «Клиенты»</div>'}
+      </div>
+
+      <div class="glass-card tools-section">
+        <div class="card-title">📋 Анкета для клиента</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:12px">Отправить перед стартом сделки</div>
+        <div class="code-block" style="padding-right:70px">${anketa}<button class="code-copy" onclick="copyText(\`${anketa}\`,this)">Копировать</button></div>
+      </div>
+
+      <div class="glass-card tools-section">
+        <div class="card-title">⭐ Шаблон отзыва</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:12px">Попросить клиента заполнить после выполнения</div>
+        <div class="code-block" style="padding-right:70px">${reviewTemplate}<button class="code-copy" onclick="copyText(\`${reviewTemplate}\`,this)">Копировать</button></div>
+      </div>
+
+      <div class="glass-card tools-section">
+        <div class="card-title">📌 Условия сотрудничества</div>
+        ${[
+          ['👥','Аккаунтов в работе','75 — до 150 сердец в сутки'],
+          ['⏱','Срок исполнения','До 14 дней в зависимости от объёма'],
+          ['🤝','Гарант','Возможна сделка через гаранта'],
+          ['🔀','Распределение','Сердца можно разбить между несколькими игроками'],
+          ['📬','Контакт','@ho1ysinner — по всем вопросам в лс'],
+          ['🎁','Бонусы','Доп. сердца за повторный заказ и приглашение друга'],
+        ].map(([icon,label,val])=>`
+          <div class="info-row">
+            <span class="info-icon">${icon}</span>
+            <div>
+              <div class="info-label">${label}</div>
+              <div style="font-size:13px;color:var(--text-soft)">${val}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    `;
+  }
+
+  document.getElementById('v-dash').innerHTML = `
+    <div class="container" style="padding-top:0;padding-bottom:40px">
+      <header class="sky-header">
+        <div class="header-inner">
+          <div class="logo"><span class="logo-icon">❤</span> Sky <span>Hearts</span></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="window.location.hash='#board'">📊 Инфо о заказах</button>
+            <span class="badge badge-admin">admin</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="stats-grid">
+        <div class="stat-card" style="--glow:rgba(245,200,66,0.15)">
+          <div class="stat-icon">📦</div>
+          <div class="stat-val c-gold">${totalOrdered}</div>
+          <div class="stat-label">Всего заказано</div>
+        </div>
+        <div class="stat-card" style="--glow:rgba(94,219,170,0.12)">
+          <div class="stat-icon">✓</div>
+          <div class="stat-val c-green">${totalGifted}</div>
+          <div class="stat-label">Отдано</div>
+        </div>
+        <div class="stat-card" style="--glow:rgba(255,107,157,0.12)">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-val c-heart">${totalRemaining}</div>
+          <div class="stat-label">Осталось</div>
+        </div>
+        <div class="stat-card" style="--glow:rgba(255,154,92,0.12)">
+          <div class="stat-icon">☀</div>
+          <div class="stat-val c-candle">${totalToday}</div>
+          <div class="stat-label">Сегодня</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        ${tabs.map((t,i)=>`<button class="tab${dashTab===t?' active':''}" onclick="renderDash('${t}')">${tabLabels[i]}</button>`).join('')}
+      </div>
+
+      <div class="fade-in">${tabContent}</div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────
+// CLIENT CARD HTML
+// ─────────────────────────────────────────────────────
+function clientCardHtml(c, showLink, showDel) {
+  const s     = clientStats(c);
+  const color = clientColor(c.id);
+  const ini   = initials(c.nick||c.name);
+  const link  = clientLink(c.id);
+  const pct   = s.percent;
+  const pbColor = s.done ? 'var(--green)' : color;
+  return `
+    <div class="client-card" style="--accent-color:${color}" onclick="goDetail('${c.id}')">
+      <div class="client-head">
+        <div class="client-left">
+          <div class="avatar" style="background:${color};--av-glow:${color}66">${ini}</div>
+          <div>
+            <div class="client-name">${c.nick||c.name}</div>
+            <div class="client-sub">${c.note||('добавлен '+c.createdAt)||''}</div>
+          </div>
+        </div>
+        <div class="chips">
+          <span class="chip chip-total">📦 ${c.ordered}</span>
+          <span class="chip chip-given">✓ ${s.gifted}</span>
+          <span class="chip chip-left">⏳ ${s.remaining}</span>
+          ${s.giftedToday?`<span class="chip chip-today">☀ ${s.giftedToday}</span>`:''}
+          ${s.done?`<span class="chip chip-done">✦ Готово</span>`:''}
+          ${c.codePhrase?`<span class="chip chip-code">${c.codePhrase}</span>`:''}
+        </div>
+      </div>
+      <div class="pb-wrap">
+        <div class="pb-fill${s.done?' pb-done':''}" style="width:${pct}%;background:${pbColor}"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:${showLink?'8px':'0'}">${pct}% выполнено</div>
+      ${showLink?`
+        <div class="link-row" onclick="event.stopPropagation()">
+          <div class="link-box">${link}</div>
+          <button class="copy-btn" id="cp-${c.id}" onclick="copyClientLink('${c.id}')">Копировать</button>
+          ${showDel?`<button class="btn btn-danger btn-sm" onclick="deleteClient('${c.id}')">✕</button>`:''}
+        </div>`:''}
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────
+// DASHBOARD ACTIONS
+// ─────────────────────────────────────────────────────
+let _giveDebounce = null;
+function giveSearchFilter() {
+  clearTimeout(_giveDebounce);
+  _giveDebounce = setTimeout(() => {
+    const inp  = document.getElementById('give-search');
+    const drop = document.getElementById('give-drop');
+    if (!inp || !drop) return;
+    const q = inp.value.trim().toLowerCase();
+    const s = loadState();
+    const results = q ? s.clients.filter(c => (c.nick||c.name).toLowerCase().includes(q)) : s.clients.slice(0, 8);
+    if (results.length === 0) {
+      drop.innerHTML = `<div style="padding:14px 16px;font-size:13px;color:var(--text-dim);font-style:italic">Нет совпадений</div>`;
+    } else {
+      drop.innerHTML = results.map(c => {
+        const st = clientStats(c);
+        const color = clientColor(c.id);
+        const ini = initials(c.nick||c.name);
+        const nameHtml = q
+          ? (c.nick||c.name).replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'), m => `<mark style="background:rgba(245,200,66,0.25);color:var(--gold);border-radius:2px">${m}</mark>`)
+          : (c.nick||c.name);
+        return `<div onmousedown="selectGiveClient('${c.id}')"
+          style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.12s">
+          <div class="avatar" style="width:30px;height:30px;font-size:10px;flex-shrink:0;background:${color}">${ini}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:13px">${nameHtml}</div>
+            <div style="font-size:11px;color:var(--text-dim)">осталось: ${st.remaining} ❤ · отдано: ${st.gifted}</div>
+          </div>
+          <div style="font-size:11px;color:${color};font-weight:700;flex-shrink:0">${st.percent}%</div>
+        </div>`;
+      }).join('');
+    }
+    drop.style.display = '';
+  }, 120);
+}
+
+function hideGiveDrop() {
+  const drop = document.getElementById('give-drop');
+  if (drop) drop.style.display = 'none';
+}
+
+function clearGiveSelection() {
+  document.getElementById('sel-client').value = '';
+  const si = document.getElementById('give-selected-info');
+  if (si) si.style.display = 'none';
+  const inp = document.getElementById('give-search');
+  if (inp) { inp.value = ''; inp.focus(); }
+  hideGiveDrop();
+}
+
+function selectGiveClient(id) {
+  const s = loadState();
+  const c = s.clients.find(x=>x.id===id);
+  if (!c) return;
+  const color = clientColor(c.id);
+  const ini   = initials(c.nick||c.name);
+  const st    = clientStats(c);
+  document.getElementById('sel-client').value = id;
+  const inp = document.getElementById('give-search');
+  if (inp) inp.value = c.nick||c.name;
+  const si = document.getElementById('give-selected-info');
+  if (si) {
+    si.style.display = 'flex';
+    document.getElementById('give-sel-avatar').textContent = ini;
+    document.getElementById('give-sel-avatar').style.background = color;
+    document.getElementById('give-selected-name').textContent = c.nick||c.name;
+    document.getElementById('give-sel-stats').textContent = `осталось: ${st.remaining} ❤ · отдано: ${st.gifted} · ${st.percent}%`;
+  }
+  hideGiveDrop();
+}
+
+function addClient() {
+  const nick      = (document.getElementById('new-nick')?.value||'').trim();
+  const order     = parseInt(document.getElementById('new-order')?.value)||0;
+  const note      = (document.getElementById('new-note')?.value||'').trim();
+  const deadline  = (document.getElementById('new-deadline')?.value||'').trim();
+  const guarantor = document.getElementById('new-guarantor')?.value || 'нет';
+  let codePhrase  = (document.getElementById('new-code')?.value||'').trim();
+  if (!nick || order<1) { showToast('✦ Введи имя и количество сердец'); return; }
+  const s = loadState();
+  if (!codePhrase) {
+    const num = String(s.clients.length + 1).padStart(3,'0');
+    const letters = nick.trim().replace(/\s+/g,' ').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    codePhrase = `AKI-${num}-${letters}`;
+  }
+  s.clients.unshift({
+    id: genId(), nick, name: nick, note, deadline, guarantor, codePhrase,
+    ordered: order, history: [],
+    createdAt: new Date().toLocaleDateString('ru-RU'),
+    addedTs: Date.now()
+  });
+  saveState(s);
+  showToast(`✦ ${nick} добавлен · Код: ${codePhrase}`);
+  renderDash('clients');
+}
+
+function deleteClient(id) {
+  if (!confirm('Удалить клиента и всю его историю?')) return;
+  const s = loadState();
+  s.clients = s.clients.filter(c=>c.id!==id);
+  saveState(s);
+  renderDash();
+}
+
+function addGiftFromDash() {
+  const cid    = document.getElementById('sel-client')?.value;
+  const amount = parseInt(document.getElementById('give-amount')?.value)||0;
+  const note   = (document.getElementById('give-note')?.value||'').trim();
+  if (!cid) { showToast('Выбери клиента из списка'); return; }
+  if (amount<1) { showToast('Введи количество сердец'); return; }
+  const s = loadState();
+  const ci = s.clients.findIndex(c=>c.id===cid);
+  if (ci<0) return;
+  s.clients[ci].history.push({ id:genId(), date:new Date().toISOString(), amount, note });
+  saveState(s);
+  const btn = document.querySelector('#v-dash .btn-gold.btn-full');
+  if (btn) { const r = btn.getBoundingClientRect(); spawnHearts(r.left+r.width/2, r.top, amount); }
+  showToast(`❤ +${amount} записано!`);
+  renderDash('overview');
+}
+
+function deleteEntryGlobal(clientId, entryId) {
+  const s = loadState();
+  const ci = s.clients.findIndex(c=>c.id===clientId);
+  if (ci<0) return;
+  s.clients[ci].history = s.clients[ci].history.filter(e=>e.id!==entryId);
+  saveState(s);
+  renderDash('history');
+}
+
+function resetToday() {
+  if (!confirm('Удалить все записи за сегодня?')) return;
+  const today = todayKey();
+  const s = loadState();
+  s.clients.forEach(c => { c.history = c.history.filter(e=>e.date.slice(0,10)!==today); });
+  saveState(s);
+  renderDash('history');
+}
+
+function resetAll() {
+  if (!confirm('Сбросить ВСЁ? Клиенты и история будут удалены.')) return;
+  saveState({ clients: [] });
+  renderDash('clients');
+}
+
+function copyClientLink(id) {
+  navigator.clipboard.writeText(clientLink(id)).then(() => {
+    const btn = document.getElementById('cp-'+id);
+    if (btn) { btn.textContent='✓ Скопировано'; btn.classList.add('copied'); setTimeout(()=>{btn.textContent='Копировать';btn.classList.remove('copied');},2000); }
+  });
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    if (btn) { const orig = btn.textContent; btn.textContent='✓ Скопировано!'; btn.classList.add('copied'); setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000); }
+  });
+}
+
+function goDetail(id) { window.location.hash = '#detail-' + id; }
+
+// ─────────────────────────────────────────────────────
+// DETAIL VIEW
+// ─────────────────────────────────────────────────────
+function renderDetail(id) {
+  const s = loadState();
+  const c = s.clients.find(x=>x.id===id);
+  if (!c) { window.location.hash=''; return; }
+  const st    = clientStats(c);
+  const color = clientColor(c.id);
+  const ini   = initials(c.nick||c.name);
+
+  document.getElementById('v-detail').innerHTML = `
+    <div class="container" style="padding-top:28px;padding-bottom:40px">
+      <button class="btn btn-back btn-sm" onclick="window.location.hash=''">← Назад</button>
+
+      <div class="glass-card">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+          <div class="avatar" style="background:${color};width:54px;height:54px;font-size:16px;flex-shrink:0">${ini}</div>
+          <div style="flex:1">
+            <div style="font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--gold)">${c.nick||c.name}</div>
+            ${c.note?`<div style="font-size:13px;color:var(--text-dim);font-style:italic;margin-top:3px">${c.note}</div>`:''}
+            ${c.codePhrase?`<div style="font-size:12px;margin-top:4px"><span style="font-family:'Courier New',monospace;color:#a78bfa;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2);border-radius:4px;padding:2px 8px">${c.codePhrase}</span></div>`:''}
+          </div>
+          <button class="copy-btn" id="det-copy" onclick="copyDetailLink('${c.id}')">🔗 Ссылка</button>
+        </div>
+
+        ${(c.deadline||c.guarantor)?`
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          ${c.deadline?`<span class="chip chip-today">⏱ ${c.deadline}</span>`:''}
+          ${c.guarantor&&c.guarantor!=='нет'?`<span class="chip chip-given">🤝 Гарант</span>`:''}
+        </div>`:''}
+
+        <div class="detail-stats">
+          <div class="detail-stat"><div class="detail-stat-val c-gold">${c.ordered}</div><div class="detail-stat-label">Заказано</div></div>
+          <div class="detail-stat"><div class="detail-stat-val c-green">${st.gifted}</div><div class="detail-stat-label">Подарено</div></div>
+          <div class="detail-stat"><div class="detail-stat-val c-heart">${st.remaining}</div><div class="detail-stat-label">Осталось</div></div>
+          <div class="detail-stat"><div class="detail-stat-val c-candle">${st.giftedToday}</div><div class="detail-stat-label">Сегодня</div></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;color:var(--text-dim)">Прогресс</span>
+          <span style="font-size:12px;font-weight:700;color:${color}">${st.percent}%</span>
+        </div>
+        <div class="pb-wrap" style="height:7px">
+          <div class="pb-fill${st.done?' pb-done':''}" style="width:${st.percent}%;background:${st.done?'var(--green)':color}"></div>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title">Записать передачу</div>
+        <div class="heart-picker">
+          <div class="heart-picker-label">Быстрый выбор</div>
+          <div class="heart-presets">
+            ${[1,5,10,20,50,100].map(n=>`<button class="preset-btn" onclick="setAmount(${n},'d-amount')">❤ ${n}</button>`).join('')}
+          </div>
+          <div class="qty-stepper">
+            <button class="qty-btn" onclick="bumpAmount(-1,'d-amount')">−</button>
+            <div class="qty-display" id="d-amount-display">1</div>
+            <button class="qty-btn" onclick="bumpAmount(1,'d-amount')">+</button>
+            <span class="qty-heart-icon">❤</span>
+            <input type="hidden" id="d-amount" value="1">
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:10px">
+          <input class="sky-input" id="d-note" placeholder="Заметка">
+          <button class="btn btn-gold" onclick="addGiftDetail('${c.id}')">❤ Записать</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="showAddOrder('${c.id}')">+ Увеличить заказ</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="deleteClientAndBack('${c.id}')">✕ Удалить</button>
+      </div>
+
+      <div id="add-order-form" style="display:none" class="glass-card">
+        <div class="card-title">Добавить к заказу</div>
+        <div class="form-row">
+          <span class="form-label">Количество</span>
+          <input class="sky-input" type="number" id="more-order" min="1" placeholder="50" style="max-width:130px">
+          <button class="btn btn-gold" onclick="commitAddOrder('${c.id}')">Добавить</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('add-order-form').style.display='none'">Отмена</button>
+        </div>
+      </div>
+
+      <div class="section-title">История передач</div>
+      <div class="glass-card">
+        ${c.history.length
+          ? [...c.history].reverse().map(e=>`
+            <div class="log-entry">
+              <div class="log-left">
+                <div class="log-orb" style="background:${color}22"><span style="color:${color}">❤</span></div>
+                <div>
+                  <div style="font-weight:600;font-size:13px">+${e.amount} ${heartWord(e.amount)}</div>
+                  ${e.note?`<div class="log-note">${e.note}</div>`:''}
+                  <div class="log-time">${formatDT(e.date)}</div>
+                </div>
+              </div>
+              <button class="del-btn" onclick="removeEntry('${c.id}','${e.id}')">✕</button>
+            </div>`).join('')
+          : '<div class="empty"><div class="empty-icon">🌿</div>Ещё ничего не передано</div>'}
+      </div>
+    </div>`;
+}
+
+function copyDetailLink(id) {
+  navigator.clipboard.writeText(clientLink(id)).then(() => {
+    const btn = document.getElementById('det-copy');
+    if (btn) { btn.textContent='✓ Скопировано!'; setTimeout(()=>btn.textContent='🔗 Ссылка',2000); }
+  });
+}
+
+// ─────────────────────────────────────────────────────
+// HEART PICKER HELPERS
+// ─────────────────────────────────────────────────────
+function setAmount(val, inputId) {
+  const inp  = document.getElementById(inputId);
+  const disp = document.getElementById(inputId + '-display');
+  if (inp)  inp.value = val;
+  if (disp) { disp.textContent = val; disp.style.transform='scale(1.25)'; setTimeout(()=>disp.style.transform='',150); }
+  const card = inp?.closest('.glass-card') || document;
+  card.querySelectorAll('.preset-btn').forEach(b => {
+    const n = parseInt(b.textContent.replace(/[^0-9]/g,''));
+    b.classList.toggle('active', n === val);
+  });
+}
+
+function bumpAmount(delta, inputId) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  setAmount(Math.max(1, (parseInt(inp.value)||1) + delta), inputId);
+}
+
+function spawnHearts(x, y, count) {
+  for (let i = 0; i < Math.min(count, 8); i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'heart-burst';
+      el.textContent = '❤';
+      el.style.left  = (x + (Math.random()-0.5)*60) + 'px';
+      el.style.top   = (y + (Math.random()-0.5)*30) + 'px';
+      el.style.color = ['#ff5c91','#f5c842','#5edbaa','#ff9a5c'][Math.floor(Math.random()*4)];
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1000);
+    }, i * 60);
+  }
+}
+
+function addGiftDetail(clientId) {
+  const amount = parseInt(document.getElementById('d-amount')?.value)||0;
+  const note   = (document.getElementById('d-note')?.value||'').trim();
+  if (amount<1) { showToast('Введи количество'); return; }
+  const s = loadState();
+  const ci = s.clients.findIndex(c=>c.id===clientId);
+  if (ci<0) return;
+  s.clients[ci].history.push({ id:genId(), date:new Date().toISOString(), amount, note });
+  saveState(s);
+  const btn = document.querySelector('#v-detail .btn-gold');
+  if (btn) { const r = btn.getBoundingClientRect(); spawnHearts(r.left+r.width/2, r.top, amount); }
+  showToast(`❤ +${amount} записано!`);
+  renderDetail(clientId);
+}
+
+function removeEntry(clientId, entryId) {
+  const s = loadState();
+  const ci = s.clients.findIndex(c=>c.id===clientId);
+  if (ci<0) return;
+  s.clients[ci].history = s.clients[ci].history.filter(e=>e.id!==entryId);
+  saveState(s);
+  renderDetail(clientId);
+}
+
+function showAddOrder(clientId) {
+  const el = document.getElementById('add-order-form');
+  if (el) el.style.display='';
+}
+
+function commitAddOrder(clientId) {
+  const n = parseInt(document.getElementById('more-order')?.value)||0;
+  if (n<1) return;
+  const s = loadState();
+  const ci = s.clients.findIndex(c=>c.id===clientId);
+  if (ci<0) return;
+  s.clients[ci].ordered += n;
+  saveState(s);
+  renderDetail(clientId);
+}
+
+function deleteClientAndBack(id) {
+  if (!confirm('Удалить клиента?')) return;
+  const s = loadState();
+  s.clients = s.clients.filter(c=>c.id!==id);
+  saveState(s);
+  window.location.hash='';
+}
+
+// ─────────────────────────────────────────────────────
+// BOARD (публичный — статистика)
+// ─────────────────────────────────────────────────────
+function renderBoard() {
+  const s = loadState();
+  const totalAll   = s.clients.reduce((a,c)=>a+c.ordered,0);
+  const totalGiven = s.clients.reduce((a,c)=>a+clientStats(c).gifted,0);
+  const totalDone  = s.clients.filter(c=>clientStats(c).done).length;
+
+  document.getElementById('v-board').innerHTML = `
+    <div class="container" style="padding-top:0;padding-bottom:60px">
+      <header class="sky-header">
+        <div class="header-inner">
+          <div class="logo"><span class="logo-icon">❤</span> Sky <span>Hearts</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <span class="badge badge-public">инфо о заказах</span>
+            <button class="btn btn-ghost btn-sm" onclick="history.back()">← Назад</button>
+          </div>
+        </div>
+      </header>
+
+      <div style="text-align:center;margin-bottom:36px">
+        <div style="font-family:'Cinzel',serif;font-size:26px;font-weight:700;color:var(--gold);
+          text-shadow:0 0 30px rgba(245,200,66,0.35);margin-bottom:8px;letter-spacing:0.06em">
+          ✦ Инфо о заказах ✦
+        </div>
+        <div style="font-size:13px;color:var(--text-dim);font-style:italic">
+          Здесь вы можете посмотреть сколько сердечек уже заказали
+        </div>
+      </div>
+
+      <div class="stats-grid" style="max-width:700px;margin:0 auto 40px">
+        <div class="stat-card" style="--glow:rgba(245,200,66,0.15)">
+          <div class="stat-icon">📦</div>
+          <div class="stat-val c-gold">${totalAll}</div>
+          <div class="stat-label">Всего заказано</div>
+        </div>
+        <div class="stat-card" style="--glow:rgba(78,207,154,0.12)">
+          <div class="stat-icon">✓</div>
+          <div class="stat-val c-green">${totalGiven}</div>
+          <div class="stat-label">Уже отдано</div>
+        </div>
+        <div class="stat-card" style="--glow:rgba(255,92,145,0.12)">
+          <div class="stat-icon">👤</div>
+          <div class="stat-val c-heart">${s.clients.length}</div>
+          <div class="stat-label">Заказчиков</div>
+        </div>
+        <div class="stat-card" style="--glow:rgba(255,154,92,0.12)">
+          <div class="stat-icon">✦</div>
+          <div class="stat-val c-candle">${totalDone}</div>
+          <div class="stat-label">Выполнено</div>
+        </div>
+      </div>
+
+      <div class="refresh-hint">Данные обновляются при перезагрузке</div>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn btn-ghost btn-sm" onclick="location.reload()">↻ Обновить</button>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────
+// PUBLIC CLIENT PAGE
+// ─────────────────────────────────────────────────────
+function renderPublic(id) {
+  const s = loadState();
+  const c = s.clients.find(x=>x.id===id);
+  const el = document.getElementById('v-public');
+
+  if (!c) {
+    el.innerHTML = `
+      <div class="pub-wrap" style="padding-top:40px;padding-bottom:40px">
+        <div class="logo" style="margin-bottom:24px"><span class="logo-icon">❤</span> Sky <span style="color:var(--heart)">Hearts</span></div>
+        <div style="text-align:center;padding:60px 0">
+          <div style="font-size:52px;margin-bottom:16px;opacity:0.4">🌫️</div>
+          <h2 style="font-family:'Cinzel',serif;font-size:18px;margin-bottom:10px;color:var(--gold)">Клиент не найден</h2>
+          <p style="color:var(--text-dim);font-size:14px;font-style:italic">Ссылка устарела или неверная.<br>Попроси продавца скинуть новую.</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const st    = clientStats(c);
+  const color = clientColor(c.id);
+  const circ  = 2 * Math.PI * 75;
+  const dash  = circ * st.percent / 100;
+
+  el.innerHTML = `
+    <div class="pub-wrap" style="padding-top:28px;padding-bottom:40px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px">
+        <div class="logo"><span class="logo-icon">❤</span> Sky <span>Hearts</span></div>
+        <span class="badge badge-public">страница клиента</span>
+      </div>
+
+      <div class="pub-hero fade-in">
+        <div class="hero-name">${c.nick||c.name}</div>
+        ${c.note?`<div style="font-size:13px;color:var(--text-dim);margin-bottom:20px;font-style:italic">${c.note}</div>`:''}
+
+        <div class="ring-wrap">
+          <svg class="ring-svg" width="170" height="170" viewBox="0 0 170 170">
+            <circle class="ring-bg" cx="85" cy="85" r="75"/>
+            <circle class="ring-fill" id="pub-ring" cx="85" cy="85" r="75"
+              stroke="${st.done?'var(--green)':color}"
+              stroke-dasharray="0 999"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-num" style="color:${st.done?'var(--green)':color}">${st.percent}%</div>
+            <div class="ring-lbl">выполнено</div>
+          </div>
+        </div>
+
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <div class="mini-lbl">Заказ</div>
+            <div class="mini-val c-gold">${c.ordered}</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-lbl">Получено</div>
+            <div class="mini-val c-green">${st.gifted}</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-lbl">Осталось</div>
+            <div class="mini-val c-heart">${st.remaining}</div>
+          </div>
+        </div>
+      </div>
+
+      ${st.done?`
+        <div class="done-banner">
+          <h3>✦ Заказ выполнен! ✦</h3>
+          <p style="color:var(--text-soft);font-size:13px">Все сердца переданы. Спасибо за доверие!</p>
+        </div>`:''}
+
+      ${st.giftedToday>0?`
+        <div class="today-banner">
+          <span>✨</span>
+          <span>Сегодня подарено: <strong>${st.giftedToday} ${heartWord(st.giftedToday)}</strong></span>
+        </div>`:''}
+
+      <div class="section-title">История передач</div>
+      <div class="glass-card">
+        ${c.history.length
+          ? [...c.history].reverse().map(e=>`
+            <div class="log-entry">
+              <div class="log-left">
+                <div class="log-orb" style="background:${color}22"><span style="color:${color}">❤</span></div>
+                <div>
+                  <div style="font-weight:600;font-size:13px">+${e.amount} ${heartWord(e.amount)}</div>
+                  ${e.note?`<div class="log-note">${e.note}</div>`:''}
+                  <div class="log-time">${formatDT(e.date)}</div>
+                </div>
+              </div>
+              <div class="log-amount">+${e.amount}</div>
+            </div>`).join('')
+          : '<div class="empty"><div class="empty-icon">🌿</div>Ещё ничего не передано</div>'}
+      </div>
+
+      <div style="text-align:center;margin-top:16px">
+        <button class="btn btn-ghost btn-sm" onclick="window.location.hash='#board'" style="margin-right:8px">📊 Инфо о заказах</button>
+        <button class="btn btn-ghost btn-sm" onclick="location.reload()">↻ Обновить</button>
+      </div>
+      <div class="refresh-hint">Данные обновляются при перезагрузке</div>
+    </div>`;
+
+  setTimeout(() => {
+    const ring = document.getElementById('pub-ring');
+    if (ring) ring.setAttribute('stroke-dasharray', `${dash} ${circ}`);
+  }, 150);
+}
+
+// ─────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────
+setTimeout(() => {
+  document.getElementById('loading').style.display = 'none';
+  route();
+}, 300);
+</script>
+</body>
+</html>
